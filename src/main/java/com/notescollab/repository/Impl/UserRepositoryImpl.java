@@ -1,7 +1,8 @@
 package com.notescollab.repository.Impl;
 
-import com.notescollab.entity.MyUser;
-import com.notescollab.repository.UserRepository;
+import java.sql.PreparedStatement;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +13,8 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
-import java.sql.PreparedStatement;
-import java.util.Optional;
-
+import com.notescollab.entity.MyUser;
+import com.notescollab.repository.UserRepository;
 
 @Repository
 public class UserRepositoryImpl implements UserRepository {
@@ -25,7 +25,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private Logger logger = LoggerFactory.getLogger ("com.notescollab.notescollab.repository.Impl.UserRepositoryImpl");
+    private Logger logger = LoggerFactory.getLogger("com.notescollab.notescollab.repository.Impl.UserRepositoryImpl");
     private static final String GET_USER_BYID_QUERY = "SELECT * FROM public.users WHERE userid = ?";
     private static final String GET_USER_BYUSERNAME_QUERY = "SELECT * FROM public.users WHERE username = ?";
     private static final String GET_USER_BYEMAIL_QUERY = "SELECT * FROM public.users WHERE emailid = ?";
@@ -34,50 +34,49 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public MyUser getUserById(Long userId) throws Exception {
-        logger.info("getUserById:: start getting user Details by userid-"+userId);
+        logger.info("getUserById:: start getting user Details by userid-" + userId);
         try {
-            MyUser user = jdbcTemplate.queryForObject ( GET_USER_BYID_QUERY, (resultSet, rowNum) -> {
-                return new MyUser (
-                        resultSet.getLong ( "userid" ),
-                        resultSet.getString ( "username" ),
-                        resultSet.getString ( "password" ),
-                        resultSet.getString ( "fullname" ),
-                        resultSet.getString ( "emailid" ),
-                        resultSet.getString ( "roles" )
-                );
+            MyUser user = jdbcTemplate.queryForObject(GET_USER_BYID_QUERY, (resultSet, rowNum) -> {
+                return new MyUser(
+                        resultSet.getLong("userid"),
+                        resultSet.getString("username"),
+                        resultSet.getString("password"),
+                        resultSet.getString("fullname"),
+                        resultSet.getString("emailid"),
+                        resultSet.getString("roles"));
 
-            }, userId );
+            }, userId);
 
             return user;
-        }catch (EmptyResultDataAccessException ac){
-            logger.error("getUserById:: Got exception while getting user details"+ac.getMessage(),ac);
-            throw new Exception ("User not found with id " + userId);
+        } catch (EmptyResultDataAccessException ac) {
+            logger.error("getUserById:: Got exception while getting user details" + ac.getMessage(), ac);
+            throw new Exception("User not found with id " + userId);
 
-        } catch(Exception e){
-            logger.info("getUserById:: Got exception while getting user details"+e.getMessage (),e);
-            throw new Exception (e.getMessage ());
+        } catch (Exception e) {
+            logger.info("getUserById:: Got exception while getting user details" + e.getMessage(), e);
+            throw new Exception(e.getMessage());
         }
     }
+
     @Override
-    public String saveUser(MyUser user){
+    public String saveUser(MyUser user) {
 
-        KeyHolder keyHolder = new GeneratedKeyHolder ();
-        String encryptPwd = passwordEncoder.encode(user.getPassword ());
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        String encryptPwd = passwordEncoder.encode(user.getPassword());
         jdbcTemplate.update(conn -> {
-                    PreparedStatement ps = conn.prepareStatement(ADD_USER_QUERY, new String[]{"userid"});
-                    ps.setString(1, user.getUsername ());
-                    ps.setString ( 2, encryptPwd);
-                    ps.setString ( 3, user.getFullname ());
-                    ps.setString ( 4, user.getEmailid ());
-                    ps.setString ( 5, user.getRoles () );
+            PreparedStatement ps = conn.prepareStatement(ADD_USER_QUERY, new String[] { "userid" });
+            ps.setString(1, user.getUsername());
+            ps.setString(2, encryptPwd);
+            ps.setString(3, user.getFullname());
+            ps.setString(4, user.getEmailid());
+            ps.setString(5, user.getRoles());
 
-                    return ps;
+            return ps;
         }, keyHolder);
 
+        int generatedId = keyHolder.getKey().intValue();
 
-        int generatedId = keyHolder.getKey().intValue ();
-
-        return "User \""+ user.getFullname () +"\" successfully created ";
+        return "User \"" + user.getFullname() + "\" successfully created ";
 
     }
 
@@ -99,10 +98,8 @@ public class UserRepositoryImpl implements UserRepository {
                             resultSet.getString("password"),
                             resultSet.getString("fullname"),
                             resultSet.getString("emailid"),
-                            resultSet.getString("roles")
-                    ),
-                    username
-            );
+                            resultSet.getString("roles")),
+                    username);
             return Optional.ofNullable(user);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -122,10 +119,8 @@ public class UserRepositoryImpl implements UserRepository {
                             resultSet.getString("password"),
                             resultSet.getString("fullname"),
                             resultSet.getString("emailid"),
-                            resultSet.getString("roles")
-                    ),
-                    emailid
-            );
+                            resultSet.getString("roles")),
+                    emailid);
             return Optional.ofNullable(user);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -144,11 +139,9 @@ public class UserRepositoryImpl implements UserRepository {
                             resultSet.getString("password"),
                             resultSet.getString("fullname"),
                             resultSet.getString("emailid"),
-                            resultSet.getString("roles")
-                    ),
+                            resultSet.getString("roles")),
                     username,
-                    emailid
-            );
+                    emailid);
             return Optional.ofNullable(user);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
